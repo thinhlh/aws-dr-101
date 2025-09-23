@@ -1,12 +1,11 @@
 resource "aws_instance" "windows" {
-  for_each      = aws_subnet.project_subnet_private_us_east_1
-  ami           = local.ami
-  instance_type = local.instance_type
-  subnet_id     = each.value.id
-  #   key_name               = aws_key_pair.my_aws_key_pair.key_name
+  for_each               = aws_subnet.project_subnet_private_us_east_1
+  ami                    = local.ami
+  instance_type          = local.instance_type
+  subnet_id              = each.value.id
   vpc_security_group_ids = [aws_security_group.windows_sg.id]
 
-  iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
+  iam_instance_profile = aws_iam_instance_profile.project_ec2_profile.name
 
   root_block_device {
     volume_size = 30
