@@ -18,13 +18,24 @@ resource "aws_instance" "windows" {
                   Invoke-WebRequest -Uri "https://nodejs.org/dist/v18.18.0/node-v18.18.0-x64.msi" -OutFile "C:\\nodejs.msi"
                   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i C:\\nodejs.msi /qn" -Wait
 
+                  # Install NSSM - the Non-Sucking Service Manager
+                  Invoke-WebRequest -Uri "https://nssm.cc/release/nssm-2.24.zip" -OutFile "C:\\nssm.zip"
+                  Expand-Archive -Path "C:\\nssm.zip" -DestinationPath "C:\\nssm"
 
-                  # Install PM2
-                  npm install pm2 -g
+                  # Install AWS CLI v2
+                  msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi
+
+                  # Install DRS Agent
+                  Invoke-WebRequest -Uri https://aws-elastic-disaster-recovery-us-east-1.s3.us-east-1.amazonaws.com/latest/windows/AwsReplicationWindowsInstaller.exe -OutFile "C:\\AWSDRSAgentSetup.exe"
+                  C:\\AWSDRSAgentSetup.exe --region us-east-1 --no-prompt # DRS Drill for all devices
+
+                  # Clean up
+                  Remove-Item "C:\\nodejs.msi"
+                  Remove-Item "C:\\AWSDRSAgentSetup.exe"
               </powershell>
                 EOF
 
   tags = {
-    Name = "dsr-windows-server-${each.value.availability_zone}"
+    Name = "drs-windows-server-${each.value.availability_zone}"
   }
 }

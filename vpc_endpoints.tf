@@ -1,6 +1,6 @@
 # Required for private subnet SSM communication
 resource "aws_vpc_endpoint" "ssm" {
-  vpc_id              = aws_vpc.main_vpc.id
+  vpc_id              = data.aws_vpc.main_vpc.id
   service_name        = "com.amazonaws.${var.aws_region}.ssm"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = [for s in aws_subnet.project_subnet_private_us_east_1 : s.id]
@@ -8,12 +8,12 @@ resource "aws_vpc_endpoint" "ssm" {
   private_dns_enabled = true
 
   tags = {
-    Name = "dsr-ssm-endpoint"
+    Name = "drs-ssm-endpoint"
   }
 }
 
 resource "aws_vpc_endpoint" "ssmmessages" {
-  vpc_id              = aws_vpc.main_vpc.id
+  vpc_id              = data.aws_vpc.main_vpc.id
   service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = [for s in aws_subnet.project_subnet_private_us_east_1 : s.id]
@@ -21,12 +21,12 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   private_dns_enabled = true
 
   tags = {
-    Name = "dsr-ssmmessages-endpoint"
+    Name = "drs-ssmmessages-endpoint"
   }
 }
 
 resource "aws_vpc_endpoint" "ec2messages" {
-  vpc_id              = aws_vpc.main_vpc.id
+  vpc_id              = data.aws_vpc.main_vpc.id
   service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = [for s in aws_subnet.project_subnet_private_us_east_1 : s.id]
@@ -34,6 +34,6 @@ resource "aws_vpc_endpoint" "ec2messages" {
   private_dns_enabled = true
 
   tags = {
-    Name = "dsr-ec2messages-endpoint"
+    Name = "drs-ec2messages-endpoint"
   }
 }
