@@ -25,6 +25,6 @@ resource "aws_instance" "windows" {
                 EOF
 
   tags = {
-    Name = "windows-server-test-dsr-${each.value.availability_zone}"
+    Name = "dsr-windows-server-${each.value.availability_zone}"
   }
 }

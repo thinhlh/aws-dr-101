@@ -2,6 +2,9 @@ resource "aws_vpc" "main_vpc" {
   cidr_block           = local.vpc_cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
+  tags = {
+    Name = "dsr-main-vpc"
+  }
 }
 
 # Subnet (private)
@@ -10,7 +13,7 @@ resource "aws_subnet" "project_subnet_private_us_east_1" {
   vpc_id   = aws_vpc.main_vpc.id
 
   tags = {
-    Name = "project-subnet-private-${each.value}"
+    Name = "dsr-project-subnet-private-${each.value}"
   }
 
   cidr_block              = cidrsubnet(aws_vpc.main_vpc.cidr_block, 4, index(var.azs, each.value) * 2 + 2) # First 2 subnets are already taken
@@ -23,7 +26,7 @@ resource "aws_subnet" "project_subnet_public_us_east_1" {
   vpc_id   = aws_vpc.main_vpc.id
 
   tags = {
-    Name = "project-subnet-public-${each.value}"
+    Name = "dsr-project-subnet-public-${each.value}"
   }
 
   cidr_block              = cidrsubnet(aws_vpc.main_vpc.cidr_block, 4, index(var.azs, each.value) * 2 + 3) # First 2 subnets are already taken
@@ -33,7 +36,7 @@ resource "aws_subnet" "project_subnet_public_us_east_1" {
 
 
 resource "aws_security_group" "windows_sg" {
-  name   = "windows-sg"
+  name   = "dsr-windows-sg"
   vpc_id = aws_vpc.main_vpc.id
 
   # Allow all traffic within the VPC
@@ -54,10 +57,16 @@ resource "aws_security_group" "windows_sg" {
 
 resource "aws_eip" "project_nat_eip" {
   for_each = toset(var.azs)
+  tags = {
+    Name = "dsr-nat-eip-${each.value}"
+  }
 }
 
 resource "aws_internet_gateway" "project_igw" {
   vpc_id = aws_vpc.main_vpc.id
+  tags = {
+    Name = "dsr-project-igw"
+  }
 }
 
 resource "aws_nat_gateway" "project_private_ngw" {
@@ -65,7 +74,11 @@ resource "aws_nat_gateway" "project_private_ngw" {
   connectivity_type = "public"
   subnet_id         = aws_subnet.project_subnet_public_us_east_1[each.value].id
   allocation_id     = aws_eip.project_nat_eip[each.value].id
+  tags = {
+    Name = "dsr-private-ngw-${each.value}"
+  }
 }
+
 resource "aws_route_table" "project_public_rt" {
   vpc_id = aws_vpc.main_vpc.id
 
@@ -87,6 +100,9 @@ resource "aws_route_table" "project_private_rt" {
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.project_private_ngw[each.value].id
+  }
+  tags = {
+    Name = "dsr-private-rt-${each.value}"
   }
 }
 

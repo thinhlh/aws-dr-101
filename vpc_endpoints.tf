@@ -6,6 +6,10 @@ resource "aws_vpc_endpoint" "ssm" {
   subnet_ids          = [for s in aws_subnet.project_subnet_private_us_east_1 : s.id]
   security_group_ids  = [aws_security_group.windows_sg.id]
   private_dns_enabled = true
+
+  tags = {
+    Name = "dsr-ssm-endpoint"
+  }
 }
 
 resource "aws_vpc_endpoint" "ssmmessages" {
@@ -16,6 +20,9 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   security_group_ids  = [aws_security_group.windows_sg.id]
   private_dns_enabled = true
 
+  tags = {
+    Name = "dsr-ssmmessages-endpoint"
+  }
 }
 
 resource "aws_vpc_endpoint" "ec2messages" {
@@ -26,4 +33,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   security_group_ids  = [aws_security_group.windows_sg.id]
   private_dns_enabled = true
 
+  tags = {
+    Name = "dsr-ec2messages-endpoint"
+  }
 }
