@@ -1,9 +1,9 @@
-output "instance_ids" {
-  value = [for i in aws_instance.windows : i.id]
+output "instance_id" {
+  value = aws_instance.windows.id
 }
 
-output "instance_ips" {
-  value = [for i in aws_instance.windows : i.private_ip]
+output "instance_ip" {
+  value = aws_instance.windows.private_ip
 }
 
 output "vpc_endpoint_ids" {
