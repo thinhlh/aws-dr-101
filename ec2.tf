@@ -5,6 +5,7 @@ resource "aws_launch_template" "window_launch_template" {
   instance_type = local.instance_type
 
   vpc_security_group_ids = [aws_security_group.windows_sg.id]
+  key_name               = data.aws_key_pair.ec2_window_key.key_name
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -39,6 +40,7 @@ resource "aws_instance" "windows" {
     id = aws_launch_template.window_launch_template.id
   }
   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
+  key_name  = data.aws_key_pair.ec2_window_key.key_name
 
   tags = {
     Name = "drs-windows-server-us-east-1a"

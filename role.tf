@@ -31,6 +31,11 @@ resource "aws_iam_role_policy_attachment" "project_drs_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSElasticDisasterRecoveryEc2InstancePolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "project_drs_recovery_policy_attach" {
+  role       = aws_iam_role.project_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSElasticDisasterRecoveryRecoveryInstancePolicy"
+}
+
 resource "aws_iam_instance_profile" "project_ec2_profile" {
   name = "drs-ec2-profile"
   role = aws_iam_role.project_ec2_role.name
