@@ -104,8 +104,8 @@ locals {
 
 resource "aws_route_table" "project_private_rt" {
   # depends_on = [aws_nat_gateway.drs_nat_gw_us_east_1c]
-  for_each   = toset(var.azs)
-  vpc_id     = data.aws_vpc.main_vpc.id
+  for_each = toset(var.azs)
+  vpc_id   = data.aws_vpc.main_vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"

@@ -3,3 +3,5 @@
 .tfvars
 *.tfstate
 *.tfstate.backup
+
+*.DS_Store
