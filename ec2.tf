@@ -29,10 +29,6 @@ resource "aws_launch_template" "window_launch_template" {
   iam_instance_profile {
     name = aws_iam_instance_profile.project_ec2_profile.name
   }
-
-  user_data = base64encode(templatefile("${path.module}/scripts/user_data.ps1.tpl", {
-    region = var.aws_region
-  }))
 }
 
 resource "aws_instance" "windows" {
@@ -41,6 +37,10 @@ resource "aws_instance" "windows" {
   }
   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
   key_name  = data.aws_key_pair.ec2_window_key.key_name
+
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/user_data.ps1.tpl", {
+    region = var.aws_region
+  }))
 
   tags = {
     Name = "drs-windows-server-us-east-1a"

@@ -12,7 +12,7 @@
 
     # Install DRS Agent
     Invoke-WebRequest -Uri https://aws-elastic-disaster-recovery-${region}.s3.${region}.amazonaws.com/latest/windows/AwsReplicationWindowsInstaller.exe -OutFile "C:\\AWSDRSAgentSetup.exe"
-    C:\\AWSDRSAgentSetup.exe --region us-east-1 --no-prompt # DRS Drill for all devices
+    C:\\AWSDRSAgentSetup.exe --region ${region} --no-prompt # DRS Drill for all devices
 
     # Copy below content to file C:\\node.msj
 
@@ -170,4 +170,18 @@ process.on('SIGTERM', () => {
     # Clean up
     Remove-Item "C:\\nodejs.msi"
     Remove-Item "C:\\AWSDRSAgentSetup.exe"
+
+
+    # Download SSM Agent
+    [System.Net.ServicePointManager]::SecurityProtocol = 'TLS12'
+    $progressPreference = 'silentlyContinue'
+    Invoke-WebRequest `
+        https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/windows_amd64/AmazonSSMAgentSetup.exe `
+        -OutFile $env:USERPROFILE\Desktop\SSMAgent_latest.exe
+    Start-Process `
+    -FilePath $env:USERPROFILE\Desktop\SSMAgent_latest.exe `
+    -ArgumentList "/S" `
+    -Wait
+    rm -Force $env:USERPROFILE\Desktop\SSMAgent_latest.exe
+    Restart-Service AmazonSSMAgent
 </powershell>

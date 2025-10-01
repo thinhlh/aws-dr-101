@@ -26,3 +26,14 @@
 #     Name = "drs-replication-configuration-template"
 #   }
 # }
+
+
+data "external" "drs_source_servers_id" {
+  depends_on = [aws_instance.windows]
+  program = ["bash", "-c", <<-EOT
+    set -e
+    SOURCE_SERVER=$(aws drs describe-source-servers --query "items[?sourceProperties.identificationHints.awsInstanceID=='${aws_instance.windows.id}'] | [0] | {sourceServerId: sourceServerID, instanceId: sourceProperties.identificationHints.awsInstanceID}" --output json)
+    echo $SOURCE_SERVER
+  EOT
+  ]
+}
