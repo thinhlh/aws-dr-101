@@ -58,12 +58,6 @@ resource "aws_launch_template" "linux_launch_template" {
   }
 }
 
-# resource "terraform_data" "linux_launch_template_config" {
-#   provisioner "local-exec" {
-#     command = "aws ec2 describe-launch-template-versions --launch-template-id lt-0041fcfe15c54ebeb --versions $Default --query 'LaunchTemplateVersions[0]' --output json"
-#   }
-# }
-
 resource "aws_instance" "linux" {
   launch_template {
     id      = aws_launch_template.linux_launch_template.id
@@ -72,29 +66,25 @@ resource "aws_instance" "linux" {
   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
   key_name  = data.aws_key_pair.ec2_window_key.key_name
 
-  # user_data_base64 = base64encode(templatefile("${path.module}/scripts/user_data.ps1.tpl", {
-  #   region = var.aws_region
-  # }))
-
   tags = {
     Name = "drs-linux-server-us-east-1a"
+    Project = "drs"
   }
 }
 
+resource "aws_instance" "windows" {
+  launch_template {
+    id = aws_launch_template.window_launch_template.id
+    version = "$Default"
+  }
+  subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
+  key_name  = data.aws_key_pair.ec2_window_key.key_name
 
-# resource "aws_instance" "windows" {
-#   launch_template {
-#     id = aws_launch_template.window_launch_template.id
-#     version = "$Default"
-#   }
-#   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
-#   key_name  = data.aws_key_pair.ec2_window_key.key_name
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/user_data.ps1.tpl", {
+    region = var.aws_region
+  }))
 
-#   user_data_base64 = base64encode(templatefile("${path.module}/scripts/user_data.ps1.tpl", {
-#     region = var.aws_region
-#   }))
-
-#   tags = {
-#     Name = "drs-windows-server-us-east-1a"
-#   }
-# }
+  tags = {
+    Name = "drs-windows-server-us-east-1a"
+  }
+}
