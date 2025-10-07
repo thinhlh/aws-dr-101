@@ -61,11 +61,3 @@ resource "aws_iam_role_policy_attachment" "lambda_ec2_get_template_data" {
   role       = aws_iam_role.drs_recovery_launch_template_sync_lambda_role.name
   policy_arn = aws_iam_policy.lambda_replicate_source_template_to_drs_policy.arn
 }
-
-resource "aws_lambda_permission" "drs_eventbridge_invoke" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.drs_recovery_launch_template_sync_lambda.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.drs_source_sever_not_stalled.arn
-}

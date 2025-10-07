@@ -20,3 +20,7 @@ provider "aws" {
 module "lambda" {
   source = "./modules/lambda"
 }
+
+module "recovery_sfn" {
+  source = "./modules/sfn"
+}

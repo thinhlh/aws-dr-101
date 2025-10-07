@@ -10,6 +10,7 @@ resource "aws_launch_template" "window_launch_template" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
+      delete_on_termination = true
       volume_size = 30
       encrypted   = true
       volume_type = "gp3"
@@ -19,6 +20,7 @@ resource "aws_launch_template" "window_launch_template" {
   block_device_mappings {
     device_name = "/dev/xvdb"
     ebs {
+      delete_on_termination = true
       volume_size = 30
       volume_type = "gp3"
       encrypted   = true
@@ -43,6 +45,7 @@ resource "aws_launch_template" "linux_launch_template" {
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
+      delete_on_termination = true
       volume_size = 8
       encrypted   = true
       volume_type = "gp3"
