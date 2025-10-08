@@ -37,3 +37,13 @@ data "external" "drs_source_servers_id" {
   EOT
   ]
 }
+
+data "external" "drs_linux_source_server_id" {
+  depends_on = [aws_instance.linux]
+  program = ["bash", "-c", <<-EOT
+    set -e
+    SOURCE_SERVER=$(aws drs describe-source-servers --query "items[?sourceProperties.identificationHints.awsInstanceID=='${aws_instance.linux.id}'] | [0] | {sourceServerId: sourceServerID, instanceId: sourceProperties.identificationHints.awsInstanceID}" --output json)
+    echo $SOURCE_SERVER
+  EOT
+  ]
+}

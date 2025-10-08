@@ -1,9 +1,8 @@
-output "instance_id" {
-  value = aws_instance.windows.id
-}
-
-output "instance_ip" {
-  value = aws_instance.windows.private_ip
+output "instance_ids" {
+  value = {
+    # windows = aws_instance.windows.id
+    linux = aws_instance.linux.id
+  }
 }
 
 output "vpc_endpoint_ids" {
@@ -23,7 +22,12 @@ output "subnet_cidrs" {
   }
 }
 
-output "source_server_id" {
+# output "window_source_server_id" {
+#   description = "The Source Server ID in AWS DRS"
+#   value       = data.external.drs_source_servers_id.result
+# }
+
+output "linux_source_server_id" {
   description = "The Source Server ID in AWS DRS"
-  value       = data.external.drs_source_servers_id.result
+  value       = data.external.drs_linux_source_server_id.result
 }

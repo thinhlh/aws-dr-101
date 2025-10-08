@@ -16,3 +16,11 @@ provider "aws" {
   region = var.aws_region
 }
 
+
+module "lambda" {
+  source = "./modules/lambda"
+}
+
+module "recovery_sfn" {
+  source = "./modules/sfn"
+}

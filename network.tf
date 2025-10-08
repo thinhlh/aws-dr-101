@@ -104,8 +104,8 @@ locals {
 
 resource "aws_route_table" "project_private_rt" {
   # depends_on = [aws_nat_gateway.drs_nat_gw_us_east_1c]
-  for_each   = toset(var.azs)
-  vpc_id     = data.aws_vpc.main_vpc.id
+  for_each = toset(var.azs)
+  vpc_id   = data.aws_vpc.main_vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -120,4 +120,13 @@ resource "aws_route_table_association" "project_rt_private_assoc" {
   for_each       = local.az_nat_gw
   subnet_id      = aws_subnet.project_subnet_private_us_east_1[each.key].id
   route_table_id = aws_route_table.project_private_rt[each.key].id
+}
+
+
+resource "aws_network_interface" "eni_private_us_east_1" {
+  for_each = aws_subnet.project_subnet_private_us_east_1
+
+  subnet_id         = each.value.id
+  private_ips_count = 1
+  security_groups   = [aws_security_group.windows_sg.id]
 }
