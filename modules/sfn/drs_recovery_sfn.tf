@@ -2,7 +2,7 @@ resource "aws_sfn_state_machine" "drs_recovery_sfn" {
     name = "drs-recovery-sfn"
     role_arn = data.aws_iam_role.drs_recovery_role.arn
     type = "STANDARD"
-    definition = templatefile("${path.module}/templates/DRSRecovery.asl.json.tpl", {
+    definition = templatefile("${path.module}/templates/drs-recovery-sfn.asl.json.tpl", {
         
     })
 

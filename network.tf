@@ -126,7 +126,7 @@ resource "aws_route_table_association" "project_rt_private_assoc" {
 resource "aws_network_interface" "eni_private_us_east_1" {
   for_each = aws_subnet.project_subnet_private_us_east_1
 
-  subnet_id = each.value.id
+  subnet_id         = each.value.id
   private_ips_count = 1
-  security_groups = [aws_security_group.windows_sg.id]
+  security_groups   = [aws_security_group.windows_sg.id]
 }

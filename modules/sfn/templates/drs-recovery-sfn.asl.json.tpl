@@ -7,10 +7,11 @@
       "Type": "Pass",
       "Next": "DescribeSourceServers",
       "Assign": {
-        "SourceServerID": "{% $states.input.SourceServerID %}",
+        "SourceServerID": "{% $exists($states.input.SourceServerID) ? $states.input.SourceServerID : $split($states.input.SourceServerArn, '/')[-1] %}",
         "IsDrill": "{% $states.input.IsDrill %}",
         "RecoverySubnetID": "{% $states.input.RecoverySubnetID %}"
-      }
+      },
+      "Comment": "Extract Source Server ID from SourceServerArn, else will extract from SourceServerID"
     },
     "DescribeSourceServers": {
       "Type": "Task",
