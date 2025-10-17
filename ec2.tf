@@ -1,77 +1,41 @@
-resource "aws_launch_template" "window_launch_template" {
-  name = "drs-windows-launch-template"
-
-  image_id      = local.ami
-  instance_type = local.instance_type
-
-  vpc_security_group_ids = [aws_security_group.windows_sg.id]
-  key_name               = data.aws_key_pair.ec2_window_key.key_name
-
-  block_device_mappings {
-    device_name = "/dev/sda1"
-    ebs {
-      delete_on_termination = true
-      volume_size           = 30
-      encrypted             = true
-      volume_type           = "gp3"
-      kms_key_id            = aws_kms_key.ebs_encryption_key.arn
-    }
-  }
-  # block_device_mappings {
-  #   device_name = "/dev/xvdb"
-  #   ebs {
-  #     delete_on_termination = true
-  #     volume_size           = 30
-  #     volume_type           = "gp3"
-  #     encrypted             = true
-  #     kms_key_id            = aws_kms_key.ebs_encryption_key.arn
-  #   }
-  # }
-
-  iam_instance_profile {
-    name = aws_iam_instance_profile.project_ec2_profile.name
-  }
-}
-
-resource "aws_launch_template" "linux_launch_template" {
-  name = "drs-linux-launch-template"
-
-  image_id      = local.linux_ami
-  instance_type = local.instance_type
-
-  vpc_security_group_ids = [aws_security_group.windows_sg.id]
-  key_name               = data.aws_key_pair.ec2_window_key.key_name
-
-  block_device_mappings {
-    device_name = "/dev/xvda"
-    ebs {
-      delete_on_termination = true
-      volume_size           = 8
-      encrypted             = true
-      volume_type           = "gp3"
-      kms_key_id            = aws_kms_key.ebs_encryption_key.arn
-    }
-  }
-
-  user_data = base64encode(templatefile("${path.module}/scripts/user_data.sh.tpl", {
-    region = var.aws_region
-  }))
-  iam_instance_profile {
-    name = aws_iam_instance_profile.project_ec2_profile.name
-  }
-}
-
 resource "aws_instance" "linux" {
-  launch_template {
-    id      = aws_launch_template.linux_launch_template.id
-    version = "$Default"
-  }
+  ami = local.linux_ami
+  instance_type = local.instance_type
+  vpc_security_group_ids = [aws_security_group.windows_sg.id]
   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
   key_name  = data.aws_key_pair.ec2_window_key.key_name
+  iam_instance_profile = aws_iam_instance_profile.project_ec2_profile.name
 
-  volume_tags = {
-    "Project" = "drs"
+  root_block_device {
+    volume_size = 8
+    delete_on_termination = true
+    encrypted = true
+    volume_type = "gp3"
+    kms_key_id = aws_kms_key.ebs_encryption_key.arn
+
+    tags = {
+      "Project" = "drs"
+      "Name"    = "drs-linux-default-volume"
+    }
   }
+
+  ebs_block_device {
+    device_name = "/dev/xvdb"
+    volume_size = 9
+    delete_on_termination = true
+    encrypted = true
+    volume_type = "gp3"
+    kms_key_id = aws_kms_key.ebs_encryption_key.arn
+
+    tags = {
+      "Project" = "drs"
+      "Name"    = "drs-linux-secondary-volume"
+    }
+  }
+
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/user_data.sh.tpl", {
+    region = var.aws_region
+  }))
 
   tags = {
     Name    = "drs-linux-server-us-east-1a"
@@ -80,10 +44,10 @@ resource "aws_instance" "linux" {
 }
 
 resource "aws_instance" "windows" {
-  launch_template {
-    id      = aws_launch_template.window_launch_template.id
-    version = "$Default"
-  }
+  ami = local.ami
+  iam_instance_profile = aws_iam_instance_profile.project_ec2_profile.name
+  instance_type = local.instance_type
+  vpc_security_group_ids = [aws_security_group.windows_sg.id]
   subnet_id = aws_subnet.project_subnet_private_us_east_1["us-east-1a"].id
   key_name  = data.aws_key_pair.ec2_window_key.key_name
 
@@ -91,11 +55,35 @@ resource "aws_instance" "windows" {
     region = var.aws_region
   }))
 
-  volume_tags = {
-    "Project" = "drs"
+  root_block_device {
+    volume_size = 30
+    delete_on_termination = true
+    encrypted = true
+    volume_type = "gp3"
+    kms_key_id = aws_kms_key.ebs_encryption_key.arn
+
+    tags = {
+      "Project" = "drs"
+      "Name"    = "drs-windows-default-volume"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 31
+    delete_on_termination = true
+    encrypted = true
+    volume_type = "gp3"
+    kms_key_id = aws_kms_key.ebs_encryption_key.arn
+
+    tags = {
+      "Project" = "drs"
+      "Name"    = "drs-windows-secondary-volume"
+    }
   }
 
   tags = {
+    Project = "drs"
     Name = "drs-windows-server-us-east-1a"
   }
 }

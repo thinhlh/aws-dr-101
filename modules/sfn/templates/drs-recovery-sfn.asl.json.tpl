@@ -16,7 +16,7 @@
     "DescribeSourceServers": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:drs:describeSourceServers",
-      "Next": "DRS Tag Source Instance",
+      "Next": "Recovery Direction Detection",
       "Arguments": {
         "Filters": {
           "SourceServerIDs": [
@@ -27,6 +27,37 @@
       "Assign": {
         "SourceInstanceID": "{% $states.result.Items[0].SourceProperties.IdentificationHints.AwsInstanceID %}"
       }
+    },
+    "Recovery Direction Detection": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ec2:describeTags",
+      "Next": "DRS Tag Source Instance",
+      "Arguments": {
+        "Filters": [
+          {
+            "Name": "resource-id",
+            "Values": [
+              "{% $SourceInstanceID %}"
+            ]
+          },
+          {
+            "Name": "resource-type",
+            "Values": [
+              "instance"
+            ]
+          },
+          {
+            "Name": "key",
+            "Values": [
+              "Project"
+            ]
+          }
+        ]
+      },
+      "Assign": {
+        "Direction": "{% $states.result.Tags[0].Value = 'drs' ? 'FAILOVER' : 'FAILBACK' %}"
+      },
+      "Comment": "Detect recovery direction whether it is failover or failback depends on the instance tags"
     },
     "DRS Tag Source Instance": {
       "Type": "Task",
@@ -170,7 +201,11 @@
         "JobID": "{% $JobID %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:drs:describeJobLogItems",
-      "Next": "Is drill"
+      "Next": "Is drill",
+      "Assign": {
+        "Error": "Recovery job failed. Please check the log",
+        "Cause": "Recovery job failed"
+      }
     },
     "Is drill": {
       "Type": "Choice",
@@ -261,7 +296,7 @@
       },
       "Resource": "arn:aws:states:::aws-sdk:drs:reverseReplication",
       "Comment": "Protect Recovered Instance by calling Reverse Instance API",
-      "Next": "Success",
+      "Next": "Delete source volumes post recovery",
       "Retry": [
         {
           "ErrorEquals": [
@@ -275,12 +310,71 @@
       ],
       "TimeoutSeconds": 300
     },
+    "Delete source volumes post recovery": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Describe Source Dangling Volumes",
+          "Condition": "{% ($states.context.Execution.Input.DeleteSourceVolumesPostRecovery) = (true) %}"
+        }
+      ],
+      "Default": "Success",
+      "Comment": "After recovery & protect recovered instance is successful, source instance's volumes will be dangling,  outdated. We would need to detach & delete these dangling volumes"
+    },
+    "Describe Source Dangling Volumes": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ec2:describeInstances",
+      "Next": "Map Source volumes",
+      "Arguments": {
+        "InstanceIds": [
+          "{% $SourceInstanceID %}"
+        ]
+      },
+      "Output": {
+        "Volumes": "{% $states.result.Reservations[0].Instances[0].BlockDeviceMappings %}"
+      }
+    },
+    "Map Source volumes": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Detach Dangling Volumes",
+        "States": {
+          "Detach Dangling Volumes": {
+            "Type": "Task",
+            "Arguments": {
+              "VolumeId": "{% $states.input.Ebs.VolumeId %}"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ec2:detachVolume",
+            "Next": "Wait for volume detachment"
+          },
+          "Wait for volume detachment": {
+            "Type": "Wait",
+            "Seconds": 60,
+            "Next": "Delete Dangling Volumes",
+            "Comment": "After sending the detach command, we need to wair for volume detachment before delete it"
+          },
+          "Delete Dangling Volumes": {
+            "Type": "Task",
+            "Arguments": {
+              "VolumeId": "{% $states.input.VolumeId %}"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ec2:deleteVolume",
+            "End": true
+          }
+        }
+      },
+      "Items": "{% $states.input.Volumes %}",
+      "Next": "Success"
+    },
     "Success": {
       "Type": "Succeed"
     },
     "Recovery job failed": {
       "Type": "Fail",
-      "Error": "{% $exists($Error) ? $Error : \"Unable to start recovery\" %}",
+      "Error": "{% $exists($Error) ? $Error : \"Unable to recovery\" %}",
       "Cause": "{% $exists($Cause) ? $Cause : \"Something wrong with start recovery\" %}"
     }
   },

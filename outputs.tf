@@ -27,7 +27,7 @@ output "subnet_cidrs" {
 #   value       = data.external.drs_source_servers_id.result
 # }
 
-output "linux_source_server_id" {
-  description = "The Source Server ID in AWS DRS"
-  value       = data.external.drs_linux_source_server_id.result
-}
+# output "linux_source_server_id" {
+#   description = "The Source Server ID in AWS DRS"
+#   value       = data.external.drs_linux_source_server_id.result
+# }
